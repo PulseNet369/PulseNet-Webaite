@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Contract Interaction</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+    <style>
+        body {
+            background-color: #1a1a2e; /* Dark blue background */
+            color: #e0f7fa; /* Light cyan text */
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: #00ff7f; /* Green color for the main heading */
+            margin-bottom: 20px;
+        }
+
+        label {
+            color: #00ff7f; /* Green color for labels */
+            margin-right: 10px;
+        }
+
+        input, select, button {
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        input, select {
+            background-color: #162447; /* Slightly darker blue for inputs */
+            color: #e0f7fa; /* Light cyan text */
+        }
+
+        button {
+            background-color: #00ff7f; /* Green background for buttons */
+            color: #1a1a2e; /* Dark blue text */
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #00e676; /* Slightly brighter green on hover */
+        }
+
+        h2 {
+            color: #00ff7f; /* Green color for subheadings */
+        }
+
+        p {
+            color: #e0f7fa; /* Light cyan text for paragraphs */
+        }
+
+        div {
+            background-color: #0f3460; /* Dark blue background for divs */
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+        }
+    </style>
+    <script type="text/javascript">
+        // Replace with your contract ABI
+        const contractAbi = [
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "_router",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "inputs": [],
+                "name": "claimDividend",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "deposit",
+                "outputs": [],
+                "stateMutability": "payable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "dividendsPerShare",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "dividendsPerShareAccuracyFactor",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "shareholder",
+                        "type": "address"
+                    }
+                ],
+                "name": "getUnpaidEarnings",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "minDistribution",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "minPeriod",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "gas",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "process",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "_minPeriod",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "_minDistribution",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "setDistributionCriteria",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "shareholder",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "setShare",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "name": "shares",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "totalExcluded",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "totalRealised",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "totalDistributed",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "totalDividends",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "totalShares",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        // Replace with your initial contract address
+        let contractAddress = '0xd097429A1188b79baAd4453333466A38a75E4A97';
+
+        // Replace with your RPC URL
+        const rpcUrl = 'https://rpc.pulsechain.com';
+
+        let web3;
+        let contract;
+
+        async function initWeb3() {
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                try {
+                    // Request account access if needed
+                    await window.ethereum.enable();
+                } catch (error) {
+                    alert('User denied account access');
+                }
+            } else if (window.web3) {
+                web3 = new Web3(window.web3.currentProvider);
+            } else {
+                alert('Non-Ethereum browser detected. You should consider trying MetaMask!');
+                return;
+            }
+            initContract();
+        }
+
+        function initContract() {
+            contract = new web3.eth.Contract(contractAbi, contractAddress);
+        }
+
+        async function interactWithContract() {
+            try {
+                const address = document.getElementById('addressInput').value;
+                const result = await contract.methods.shares(address).call();
+                // Convert Wei to ETH
+                const amount1 = web3.utils.fromWei(result[0], 'ether');
+                const amount2 = web3.utils.fromWei(result[1], 'ether');
+                const amount3 = web3.utils.fromWei(result[2], 'ether');
+                // Display results
+                document.getElementById('amount1').innerText = amount1;
+                document.getElementById('amount2').innerText = amount2;
+                document.getElementById('amount3').innerText = amount3;
+            } catch (error) {
+                // Show error message
+                alert('Error interacting with contract: ' + error.message);
+            }
+        }
+
+        function updateContractAddress() {
+            const selectedContract = document.getElementById('contractSelect').value;
+            contractAddress = selectedContract;
+            initContract();
+        }
+
+        window.addEventListener('load', async () => {
+            await initWeb3();
+            // Optional: You can pre-fill the address input with the current user's Ethereum address
+            if (web3 && web3.currentProvider && web3.currentProvider.selectedAddress) {
+                document.getElementById('addressInput').value = web3.currentProvider.selectedAddress;
+            }
+        });
+    </script>
+</head>
+<body>
+    <h1>Smart Contract Interaction</h1>
+    <div>
+        <label for="contractSelect">Select Contract:</label>
+        <select id="contractSelect" onchange="updateContractAddress()">
+            <option value="0xd097429A1188b79baAd4453333466A38a75E4A97">PulseNet (PLSN)</option>
+            <option value="0x58eb492e2f481cecef96f343f67602cb7b2b8b89">NetGain (GAIN)</option>
+            <!-- Add more options here -->
+        </select>
+    </div>
+    <div>
+        <label for="addressInput">Enter Wallet Address:</label>
+        <input type="text" id="addressInput" placeholder="0x...">
+        <button onclick="interactWithContract()">Call SHARE Function</button>
+    </div>
+    <div>
+        <h2>Result:</h2>
+        <p>Balance: <span id="amount1"></span></p>
+        <p>Amount 2: <span id="amount2"></span></p>
+        <p>Total Dividends: <span id="amount3"></span></p>
+    </div>
+</body>
+</html>
